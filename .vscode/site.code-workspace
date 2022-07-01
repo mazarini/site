@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "path": ".."
+        }
+    ],
+    "settings": {
+        "files.associations": {
+            "*.code-workspace": "json",
+            "*.env.test": "env",
+            "*.html": "twig",
+            "*.neon": "yaml",
+            "*.neon.dist": "yaml"
+        },
+        "emmet.includeLanguages": {
+            "twig": "html"
+        },
+        "editor.formatOnSave": true,
+        "php-cs-fixer.onsave": true,
+        "twig-language-2.indentStyle": "space",
+        "files.insertFinalNewline": true
+    }
+}
