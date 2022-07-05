@@ -17,20 +17,30 @@
  * with mazarini/site. If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace App\Controller;
+namespace App\Form;
 
-use App\Repository\PageRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Page;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class HomeController extends AbstractController
+class PageType extends AbstractType
 {
-    #[Route('/', name: 'app_home')]
-    public function index(PageRepository $pageRepository): Response
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        return $this->render('page/render.html.twig', [
-            'page' => $pageRepository->FindOneBy(['slug' => 'homepage']),
+        $builder
+            ->add('title')
+            ->add('slug')
+            ->add('headTitle')
+            ->add('description')
+            ->add('content')
+        ;
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'data_class' => Page::class,
         ]);
     }
 }

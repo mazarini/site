@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block head_title %}
+    New Page
+{% endblock %}
+
+{% block title %}
+    Create new Page
+{% endblock %}
+
+{% block content %}
+    {{ include('page/_form.html.twig') }}
+
+    <a href="{{ path('app_admin_page_index') }}">back to list</a>
+{% endblock %}

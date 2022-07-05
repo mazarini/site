@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block head_title %}
+    {{ page.headTitle }}
+{% endblock %}
+
+{% block title %}
+    {{ page.title }}
+{% endblock %}
+
+{% block content %}
+    {% autoescape false %}
+        {{ page.content }}
+    {% endautoescape %}
+    <a href="{{ path('app_admin_page_edit', {'slug': page.slug}) }}">edit</a>
+{% endblock %}

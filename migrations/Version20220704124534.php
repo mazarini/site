@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of mazarini/site.
  *
@@ -17,20 +19,28 @@
  * with mazarini/site. If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace App\Controller;
+namespace DoctrineMigrations;
 
-use App\Repository\PageRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
 
-class HomeController extends AbstractController
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20220704124534 extends AbstractMigration
 {
-    #[Route('/', name: 'app_home')]
-    public function index(PageRepository $pageRepository): Response
+    public function getDescription(): string
     {
-        return $this->render('page/render.html.twig', [
-            'page' => $pageRepository->FindOneBy(['slug' => 'homepage']),
-        ]);
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
     }
 }

@@ -19,18 +19,19 @@
 
 namespace App\Controller;
 
-use App\Repository\PageRepository;
+use App\Entity\Page;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class HomeController extends AbstractController
+#[Route('/')]
+class PageController extends AbstractController
 {
-    #[Route('/', name: 'app_home')]
-    public function index(PageRepository $pageRepository): Response
+    #[Route('/{slug}', name: 'app_page_show', methods: ['GET'])]
+    public function show(Page $page): Response
     {
         return $this->render('page/render.html.twig', [
-            'page' => $pageRepository->FindOneBy(['slug' => 'homepage']),
+            'page' => $page,
         ]);
     }
 }
