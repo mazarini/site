@@ -48,9 +48,10 @@ class HomeControllerTest extends WebTestCase
 
     public function testRender(): void
     {
-        // $this->markTestIncomplete();
-        $this->client->request('GET', sprintf('%s%s', $this->path, 'homepage'));
-
+        $home = $this->repository->findOneBy(['slug' => 'homepage']);
+        if (null !== $home) {
+            $this->client->request('GET', sprintf('%s%s', $this->path, $home->getSlug()));
+        }
         self::assertResponseStatusCodeSame(200);
         self::assertPageTitleContains('Accueil');
     }
