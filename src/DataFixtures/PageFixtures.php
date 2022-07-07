@@ -19,16 +19,43 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Page;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
-class AppFixtures extends Fixture
+class PageFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        // $product = new Product();
-        // $manager->persist($product);
+        $this->loadPages($manager);
+    }
+
+    private function loadPages(ObjectManager $manager): void
+    {
+        foreach ($this->getPageData() as [$title, $content]) {
+            $page = new Page();
+            $page->setSlug($title);
+            $page->setHeadTitle($title);
+            $page->setTitle($title);
+            $page->setDescription($title);
+            $page->setContent($content);
+
+            $manager->persist($page);
+        }
 
         $manager->flush();
+    }
+
+    /**
+     * getPageData.
+     *
+     * @return array<int,array<int,string>>
+     */
+    private function getPageData(): array
+    {
+        return [
+            // $pageData = [$title, $content];
+            ['homepage', '<p>contenu de homepage</p>'],
+        ];
     }
 }

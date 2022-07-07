@@ -35,6 +35,13 @@ class PageAdminControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        $this->client->request('GET', '/login');
+        self::assertResponseStatusCodeSame(200);
+        $this->client->submitForm('Sign in', [
+            'username' => 'admin',
+            'password' => 'admin',
+        ]);
+
         $registry = static::getContainer()->get('doctrine');
         if (null !== $registry && is_a($registry, Registry::class)) {
             $this->registry = $registry;

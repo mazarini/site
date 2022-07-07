@@ -36,6 +36,13 @@ class UserControllerTest extends WebTestCase
     {
         $this->client = static::createClient();
 
+        $this->client->request('GET', '/login');
+        self::assertResponseStatusCodeSame(200);
+        $this->client->submitForm('Sign in', [
+            'username' => 'admin',
+            'password' => 'admin',
+        ]);
+
         $registry = static::getContainer()->get('doctrine');
         if (null !== $registry && is_a($registry, Registry::class)) {
             $this->registry = $registry;
@@ -46,7 +53,9 @@ class UserControllerTest extends WebTestCase
         }
 
         foreach ($this->repository->findAll() as $object) {
-            $this->repository->remove($object, true);
+            if ('admin' !== $object->getUsername()) {
+                $this->repository->remove($object, true);
+            }
         }
     }
 
@@ -91,7 +100,7 @@ class UserControllerTest extends WebTestCase
 
         $this->repository->add($fixture, true);
 
-        $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
+        $this->client->request('GET', sprintf('%s%s%s', $this->path, $fixture->getId(), '/edit'));
 
         self::assertResponseStatusCodeSame(200);
         self::assertPageTitleContains('User');
@@ -120,12 +129,14 @@ class UserControllerTest extends WebTestCase
 
         self::assertResponseRedirects('/admin/user/');
 
-        $fixture = $this->repository->findAll();
+        $fixture = $this->repository->findOneBy(['id' => $fixture->getId()]);
 
-        self::assertSame('Something New', $fixture[0]->getUsername());
-//      self::assertSame('Something New', $fixture[0]->getRoles());
-        self::assertSame('Something New', $fixture[0]->getPassword());
-        self::assertSame('Something New', $fixture[0]->getPublicName());
+        if (null !== $fixture) {
+            self::assertSame('Something New', $fixture->getUsername());
+//      self::assertSame('Something New', $fixture->getRoles());
+            self::assertSame('Something New', $fixture->getPassword());
+            self::assertSame('Something New', $fixture->getPublicName());
+        }
     }
 
     public function testRemove(): void

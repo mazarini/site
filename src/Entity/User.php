@@ -49,6 +49,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255)]
     private string $publicName = '';
 
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $email = '';
+
     public function isNew(): bool
     {
         return 0 === $this->getId();
@@ -147,6 +150,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPublicName(string $publicName): self
     {
         $this->publicName = $publicName;
+
+        return $this;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
 
         return $this;
     }

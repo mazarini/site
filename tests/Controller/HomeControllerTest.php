@@ -53,6 +53,6 @@ class HomeControllerTest extends WebTestCase
             $this->client->request('GET', sprintf('%s%s', $this->path, $home->getSlug()));
         }
         self::assertResponseStatusCodeSame(200);
-        self::assertPageTitleContains('Accueil');
+        self::assertPageTitleContains('homepage');
     }
 }
