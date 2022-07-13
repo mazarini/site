@@ -33,6 +33,9 @@ class Menu
     private ?int $id = 0;
 
     #[ORM\Column(type: 'string', length: 255)]
+    private string $slug = '';
+
+    #[ORM\Column(type: 'string', length: 255)]
     private string $url = '';
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -55,9 +58,30 @@ class Menu
         $this->childs = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): int
     {
+        if (null === $this->id) {
+            $this->id = 0;
+        }
+
         return $this->id;
+    }
+
+    public function isNew(): bool
+    {
+        return 0 === $this->getId();
+    }
+
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
     }
 
     public function getUrl(): ?string

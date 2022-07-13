@@ -22,6 +22,7 @@
                 {% block content %}{% endblock %}
             </div>
         {% endblock %}
+        {% block static %}{% endblock %}
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
         {% endblock %}

@@ -1,17 +1,21 @@
 {% extends 'base.html.twig' %}
 
 {% block head_title %}
-    Edit Menu
+    {% if menu.New %}
+        New Menu
+    {% else %}
+        Edit Menu
+    {% endif %}
 {% endblock %}
 
 {% block title %}
-    Edit Menu
+    {% if menu.New %}
+        New Menu
+    {% else %}
+        Edit Menu
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-    {{ include('menu/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <a href="{{ path('app_menu_index') }}">back to list</a>
-
-    {{ include('menu/_delete_form.html.twig') }}
+    {{ include('menu/_form.html.twig') }}
 {% endblock %}

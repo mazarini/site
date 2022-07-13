@@ -1,4 +1,5 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_widget(form) }}
+<a class="btn btn-primary" href="{{ path('app_menu_show', {'id': root.id}) }}">Cancel</a>
+<button class="btn btn-primary">Validate</button>
 {{ form_end(form) }}

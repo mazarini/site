@@ -26,74 +26,116 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/admin/menu')]
 class MenuAdminController extends AbstractController
 {
-    #[Route('/', name: 'app_menu_index', methods: ['GET'])]
-    public function index(MenuRepository $menuRepository, int $id = 0): Response
+    #[
+        Route('/', name: 'app_menu', methods: ['GET']),
+        Route('/index.html', name: 'app_menu_index', methods: ['GET']),
+        Route('/0/show.html', name: 'app_menu_index_0', methods: ['GET'], priority: 10)
+    ]
+    public function index(MenuRepository $menuRepository): Response
     {
-        return $this->render('menu/index.html.twig', [
-            'menus' => $menuRepository->findAll(),
-        ]);
+        $root = $menuRepository->findOneBy(['slug' => 'main']);
+
+        if (null === $root) {
+            $root = new menu();
+            $root->setSlug('main');
+            $root->setLabel('Main menu');
+            $menuRepository->add($root, true);
+        }
+
+        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
     }
 
-    #[Route('/new', name: 'app_menu_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, MenuRepository $menuRepository): Response
+    #[Route('/{id}/new.html', name: 'app_menu_new', methods: ['GET', 'POST'])]
+    public function new(Request $request, MenuRepository $menuRepository, Menu $root): Response
     {
+        $childs = $menuRepository->findBy(['parent' => $root], ['weight' => 'ASC']);
+        foreach ($childs as $child) {
+            $root->addChild($child);
+        }
+
         $menu = new Menu();
+        $menu->setParent($root);
+        $root->addChild($menu);
+        $menu->setWeight($root->getChilds()->count());
         $form = $this->createForm(MenuType::class, $menu);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $menuRepository->add($menu, true);
 
-            return $this->redirectToRoute('app_menu_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderForm('menu/new.html.twig', [
+        return $this->renderForm('menu/edit.html.twig', [
+            'root' => $root,
             'menu' => $menu,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_menu_show', methods: ['GET'])]
-    public function show(Menu $menu): Response
+    #[Route('/{id}/edit.html', name: 'app_menu_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, MenuRepository $menuRepository, Menu $menu): Response
     {
+        $root = $menu;
+        $form = $this->createForm(MenuType::class, $menu);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $menuRepository->add($menu, true);
+
+            return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->renderForm('menu/edit.html.twig', [
+            'root' => $menu,
+            'menu' => $menu,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}/show.html', name: 'app_menu_show', methods: ['GET'])]
+    public function show(MenuRepository $menuRepository, Menu $menu): Response
+    {
+        if (null === $menu->getParent()) {
+            $menu->setParent(new Menu());
+        }
+
+        $childs = $menuRepository->findBy(['parent' => $menu], ['weight' => 'ASC']);
+        foreach ($childs as $child) {
+            $menu->addChild($child);
+        }
+
         return $this->render('menu/show.html.twig', [
             'menu' => $menu,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_menu_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Menu $menu, MenuRepository $menuRepository): Response
-    {
-        $form = $this->createForm(MenuType::class, $menu);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $menuRepository->add($menu, true);
-
-            return $this->redirectToRoute('app_menu_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('menu/edit.html.twig', [
-            'menu' => $menu,
-            'form' => $form,
-        ]);
-    }
-
-    #[Route('/{id}', name: 'app_menu_delete', methods: ['POST'])]
-    public function delete(Request $request, Menu $menu, MenuRepository $menuRepository): Response
+    #[Route('/{id}/delete.html', name: 'app_menu_delete', methods: ['POST'])]
+    public function delete(Request $request, MenuRepository $menuRepository, EntityManagerInterface $manager, Menu $menu): Response
     {
         $token = $request->request->get('_token');
         if (!\is_string($token)) {
             $token = null;
         }
-        if ($this->isCsrfTokenValid('delete'.$menu->getId(), $token)) {
+        if ($this->isCsrfTokenValid('delete' . $menu->getId(), $token)) {
+            $root = $menu->getParent();
+            $weight = $menu->getWeight();
             $menuRepository->remove($menu, true);
+            $childs = $menuRepository->findBy(['parent' => $root], ['weight' => 'ASC']);
+            foreach ($childs as $child) {
+                if ($weight < $child->getWeight()) {
+                    $child->setWeight($child->getWeight() - 1);
+                    $manager->persist($child);
+                }
+            }
+            $manager->flush();
         }
 
-        return $this->redirectToRoute('app_menu_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
     }
 }

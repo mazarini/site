@@ -8,30 +8,75 @@
 {% endblock %}
 
 {% block content %}
+
     <table class="table">
         <tbody>
             <tr>
-                <th>Id</th>
-                <td>{{ menu.id }}</td>
-            </tr>
-            <tr>
-                <th>Url</th>
-                <td>{{ menu.url }}</td>
+                <th>Slug</th>
+                <td>{{ menu.slug }}</td>
             </tr>
             <tr>
                 <th>Label</th>
                 <td>{{ menu.label }}</td>
             </tr>
             <tr>
-                <th>Weight</th>
-                <td>{{ menu.weight }}</td>
+                <th>Url</th>
+                <td>{{ menu.url }}</td>
             </tr>
         </tbody>
     </table>
 
-    <a href="{{ path('app_menu_index') }}">back to list</a>
+    {% if menu.parent.id == 0 %}
+        <a class="btn btn-primary disable" href="#">parent</a>
+        <a class="btn btn-primary disable" href="#">edit</a>
+    {% else %}
+        <a class="btn btn-primary" href="{{ path('app_menu_show', {'id': menu.parent.id}) }}">parent</a>
+        <a class="btn btn-primary" href="{{ path('app_menu_edit', {'id': menu.id}) }}">edit</a>
+    {% endif %}
 
-    <a href="{{ path('app_menu_edit', {'id': menu.id}) }}">edit</a>
+    {% if menu.childs.count == 0 %}
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            Delete
+        </button>
+    {% else %}
+        <button type="button" class="btn btn-primary disable" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            Delete
+        </button>
+    {% endif %}
 
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Weight</th>
+                <th>Label</th>
+                <th>Url</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for child in menu.childs %}
+                <tr>
+                    <td>{{ child.weight }}</td>
+                    <td>{{ child.label }}</td>
+                    <td>{{ child.url }}</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="{{ path('app_menu_show', {'id': child.id}) }}">show</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">no records found</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3"></td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="{{ path('app_menu_new', {'id': menu.id}) }}">Add</a>
+                </td>
+            </tr>
+        </tbody>
+    </tbody>
+</table>{% endblock %}{% block static %}
+{% if menu.childs.count == 0 %}
     {{ include('menu/_delete_form.html.twig') }}
-{% endblock %}
+{% endif %}{% endblock %}
