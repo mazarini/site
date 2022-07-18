@@ -120,6 +120,11 @@ class Menu
         return $this;
     }
 
+    public function haveParent(): bool
+    {
+        return null !== $this->parent;
+    }
+
     public function getParent(): ?self
     {
         return $this->parent;

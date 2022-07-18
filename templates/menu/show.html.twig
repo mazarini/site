@@ -26,12 +26,12 @@
         </tbody>
     </table>
 
-    {% if menu.parent.id == 0 %}
-        <a class="btn btn-primary disable" href="#">parent</a>
-        <a class="btn btn-primary disable" href="#">edit</a>
-    {% else %}
+    {% if menu.haveParent %}
         <a class="btn btn-primary" href="{{ path('app_menu_show', {'id': menu.parent.id}) }}">parent</a>
         <a class="btn btn-primary" href="{{ path('app_menu_edit', {'id': menu.id}) }}">edit</a>
+    {% else %}
+        <a class="btn btn-primary disable" href="#">parent</a>
+        <a class="btn btn-primary disable" href="#">edit</a>
     {% endif %}
 
     {% if menu.childs.count == 0 %}
@@ -75,8 +75,12 @@
                 </td>
             </tr>
         </tbody>
-    </tbody>
-</table>{% endblock %}{% block static %}
-{% if menu.childs.count == 0 %}
-    {{ include('menu/_delete_form.html.twig') }}
-{% endif %}{% endblock %}
+    </table>
+    {{ dump(menu) }}
+{% endblock %}
+
+{% block static %}
+    {% if menu.childs.count == 0 %}
+        {{ include('menu/_delete_form.html.twig') }}
+    {% endif %}
+{% endblock %}

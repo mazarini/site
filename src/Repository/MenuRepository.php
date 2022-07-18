@@ -20,64 +20,70 @@
 namespace App\Repository;
 
 use App\Entity\Menu;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Menu>
+ * @extends ObjectRepository<Menu>
  *
  * @method Menu|null find($id, $lockMode = null, $lockVersion = null)
  * @method Menu|null findOneBy(array $criteria, array $orderBy = null)
  * @method Menu[]    findAll()
  * @method Menu[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class MenuRepository extends ServiceEntityRepository
+class MenuRepository extends ObjectRepository
 {
+    /**
+     * @var array<int|string, Menu>
+     */
+    private array $menus = [];
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Menu::class);
-    }
 
-    public function add(Menu $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->persist($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
+        // Load all menus
+        foreach ($this->findBy([], ['parent' => 'asc', 'weight' => 'asc']) as $menu) {
+            $this->addMenu($menu);
         }
-    }
 
-    public function remove(Menu $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
+        // Create "main" is not
+        if (0 === \count($this->menus)) {
+            $menu = new menu();
+            $menu->setSlug('main');
+            $menu->setLabel('Main menu');
+            $this->add($menu, true);
+            $this->addMenu($menu);
         }
+
+        $this->menus[0] = $this->menus['main'];
     }
 
-//    /**
-//     * @return Menu[] Returns an array of Menu objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('m.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function getbyId(int $id): Menu
+    {
+        return $this->menus[$id];
+    }
 
-//    public function findOneBySomeField($value): ?Menu
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function getbySlug(string $slug): Menu
+    {
+        return $this->menus[$slug];
+    }
+
+    public function verifySlug(menu $menu): bool
+    {
+        switch (true) {
+            case !isset($this->menus[$menu->getSlug()]):
+                // New slug
+                return true;
+            case $this->menus[$menu->getSlug()]->getId() === $menu->getId():
+                // Slug of current menu (not changed)   
+                return true;
+        }
+        return false;
+    }
+
+    private function addMenu(Menu $menu): void
+    {
+        $this->menus[$menu->getId()] = $menu;
+        $this->menus[$menu->getSlug()] = $menu;
+    }
 }

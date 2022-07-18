@@ -22,11 +22,11 @@ namespace App\Controller\Admin;
 use App\Entity\Menu;
 use App\Form\MenuType;
 use App\Repository\MenuRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/admin/menu')]
 class MenuAdminController extends AbstractController
@@ -34,20 +34,12 @@ class MenuAdminController extends AbstractController
     #[
         Route('/', name: 'app_menu', methods: ['GET']),
         Route('/index.html', name: 'app_menu_index', methods: ['GET']),
-        Route('/0/show.html', name: 'app_menu_index_0', methods: ['GET'], priority: 10)
     ]
     public function index(MenuRepository $menuRepository): Response
     {
-        $root = $menuRepository->findOneBy(['slug' => 'main']);
+        $id = $menuRepository->getById(0)->getId();
 
-        if (null === $root) {
-            $root = new menu();
-            $root->setSlug('main');
-            $root->setLabel('Main menu');
-            $menuRepository->add($root, true);
-        }
-
-        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_menu_show', ['id' => $id], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}/new.html', name: 'app_menu_new', methods: ['GET', 'POST'])]
@@ -99,16 +91,9 @@ class MenuAdminController extends AbstractController
     }
 
     #[Route('/{id}/show.html', name: 'app_menu_show', methods: ['GET'])]
-    public function show(MenuRepository $menuRepository, Menu $menu): Response
+    public function show(MenuRepository $menuRepository, int $id): Response
     {
-        if (null === $menu->getParent()) {
-            $menu->setParent(new Menu());
-        }
-
-        $childs = $menuRepository->findBy(['parent' => $menu], ['weight' => 'ASC']);
-        foreach ($childs as $child) {
-            $menu->addChild($child);
-        }
+        $menu = $menuRepository->getById($id);
 
         return $this->render('menu/show.html.twig', [
             'menu' => $menu,
@@ -122,7 +107,7 @@ class MenuAdminController extends AbstractController
         if (!\is_string($token)) {
             $token = null;
         }
-        if ($this->isCsrfTokenValid('delete' . $menu->getId(), $token)) {
+        if ($this->isCsrfTokenValid('delete'.$menu->getId(), $token)) {
             $root = $menu->getParent();
             $weight = $menu->getWeight();
             $menuRepository->remove($menu, true);
