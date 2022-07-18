@@ -25,7 +25,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
  * @template T of object
  * @template-extends ServiceEntityRepository<T>
  */
-class ObjectRepository extends ServiceEntityRepository
+abstract class ObjectRepository extends ServiceEntityRepository
 {
     public function add(object $entity, bool $flush = false): void
     {
