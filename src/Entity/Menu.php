@@ -50,7 +50,10 @@ class Menu
     /**
      * @var Collection<int, self>
      */
-    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class)]
+    #[
+        ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class),
+        ORM\OrderBy(['weight' => 'ASC'])
+    ]
     private Collection $childs;
 
     public function __construct()
@@ -142,6 +145,14 @@ class Menu
      */
     public function getChilds(): Collection
     {
+        /*
+        uasort(
+            $this->childs,
+            function ($a, $b) {
+                return $a->getWeight() < $b->getWeight() ? 1 : -1;
+            }
+        );
+*/
         return $this->childs;
     }
 

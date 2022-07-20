@@ -58,14 +58,22 @@ class MenuRepository extends ObjectRepository
         $this->menus[0] = $this->menus['main'];
     }
 
-    public function getbyId(int $id): Menu
+    public function getbyId(int $id): ?Menu
     {
-        return $this->menus[$id];
+        if (isset($this->menus[$id])) {
+            return $this->menus[$id];
+        }
+
+        return null;
     }
 
-    public function getbySlug(string $slug): Menu
+    public function getbySlug(string $slug): ?Menu
     {
-        return $this->menus[$slug];
+        if (isset($this->menus[$slug])) {
+            return $this->menus[$slug];
+        }
+
+        return null;
     }
 
     public function verifySlug(menu $menu): bool
@@ -75,9 +83,10 @@ class MenuRepository extends ObjectRepository
                 // New slug
                 return true;
             case $this->menus[$menu->getSlug()]->getId() === $menu->getId():
-                // Slug of current menu (not changed)   
+                // Slug of current menu (not changed)
                 return true;
         }
+
         return false;
     }
 

@@ -37,27 +37,180 @@ class MenuAdminController extends AbstractController
     ]
     public function index(MenuRepository $menuRepository): Response
     {
-        $id = $menuRepository->getById(0)->getId();
+        $root = $menuRepository->getById(0);
+        if (null === $root) {
+            throw new \LogicException('No "main" menu');
+        }
 
-        return $this->redirectToRoute('app_menu_show', ['id' => $id], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}/new.html', name: 'app_menu_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, MenuRepository $menuRepository, Menu $root): Response
+    public function new(Request $request, MenuRepository $menuRepository, int $id): Response
     {
-        $childs = $menuRepository->findBy(['parent' => $root], ['weight' => 'ASC']);
-        foreach ($childs as $child) {
-            $root->addChild($child);
+        $root = $menuRepository->getById($id);
+        if (null === $root) {
+            $this->addFlash('warning', 'Parent inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
         }
 
         $menu = new Menu();
-        $menu->setParent($root);
         $root->addChild($menu);
         $menu->setWeight($root->getChilds()->count());
+
+        return $this->update($request, $menuRepository, $root, $menu);
+    }
+
+    #[Route('/{id}/edit.html', name: 'app_menu_edit', methods: ['GET', 'POST'])]
+    public function edit(Request $request, MenuRepository $menuRepository, int $id): Response
+    {
+        $menu = $menuRepository->getById($id);
+        if (null === $menu) {
+            $this->addFlash('warning', 'Menu inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        return $this->update($request, $menuRepository, $menu, $menu);
+    }
+
+    #[Route('/{id}/up.html', name: 'app_menu_up', methods: ['GET', 'POST'])]
+    public function up(MenuRepository $menuRepository, int $id): Response
+    {
+        $menu = $menuRepository->getById($id);
+        $parent = $menu->getParent();
+        if (null === $menu) {
+            $this->addFlash('warning', 'Menu inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        if (null === $parent) {
+            $this->addFlash('warning', 'Parent inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        $weight = $menu->getWeight() - 1;
+
+        foreach ($parent->getChilds() as $child) {
+            if ($child->getWeight() === $weight) {
+                $otherMenu = $child;
+            }
+        }
+
+        $menu->setWeight($weight);
+        $menuRepository->add($menu);
+        $otherMenu->setWeight($weight + 1);
+        $menuRepository->add($otherMenu);
+        $menuRepository->flush();
+
+        return $this->redirectToRoute('app_menu_show', ['id' => $parent->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/down.html', name: 'app_menu_down', methods: ['GET', 'POST'])]
+    public function down(MenuRepository $menuRepository, int $id): Response
+    {
+        $menu = $menuRepository->getById($id);
+        $parent = $menu->getParent();
+        if (null === $menu) {
+            $this->addFlash('warning', 'Menu inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        if (null === $parent) {
+            $this->addFlash('warning', 'Parent inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        $weight = $menu->getWeight() + 1;
+
+        foreach ($parent->getChilds() as $child) {
+            if ($child->getWeight() === $weight) {
+                $otherMenu = $child;
+            }
+        }
+
+        $menu->setWeight($weight);
+        $menuRepository->add($menu);
+        $otherMenu->setWeight($weight - 1);
+        $menuRepository->add($otherMenu);
+        $menuRepository->flush();
+
+        return $this->redirectToRoute('app_menu_show', ['id' => $parent->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/show.html', name: 'app_menu_show', methods: ['GET'])]
+    public function show(MenuRepository $menuRepository, int $id): Response
+    {
+        $menu = $menuRepository->getById($id);
+        if (null === $menu) {
+            $this->addFlash('warning', 'Menu inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        return $this->render('menu/show.html.twig', [
+            'menu' => $menu,
+        ]);
+    }
+
+    #[Route('/{id}/delete.html', name: 'app_menu_delete', methods: ['POST'])]
+    public function delete(Request $request, MenuRepository $menuRepository, EntityManagerInterface $manager, int $id): Response
+    {
+        $menu = $menuRepository->getById($id);
+        if (null === $menu) {
+            $this->addFlash('warning', 'Menu inconnu, retour à la racine');
+
+            return $this->index($menuRepository);
+        }
+
+        $root = $menu->getParent();
+        if (null === $root) {
+            $this->addFlash('error', 'La racine ne peut pas être supprimée');
+
+            return $this->index($menuRepository);
+        }
+
+        if (0 < $menu->getChilds()->count()) {
+            $this->addFlash('error', 'Supprimer les enfants avant');
+
+            return $this->redirectToRoute('app_menu_show', ['id' => $menu->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        $token = $request->request->get('_token');
+        if (!\is_string($token)) {
+            $token = null;
+        }
+        if (!$this->isCsrfTokenValid('delete'.$menu->getId(), $token)) {
+            $this->addFlash('error', 'Erreur de token');
+
+            return $this->redirectToRoute('app_menu_show', ['id' => $menu->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        $weight = $menu->getWeight();
+        foreach ($menu->getChilds() as $child) {
+            if ($weight < $child->getWeight()) {
+                $child->setWeight($child->getWeight() - 1);
+                $manager->persist($child);
+            }
+        }
+        $menuRepository->remove($menu, true);
+
+        $manager->flush();
+
+        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    private function update(Request $request, MenuRepository $menuRepository, Menu $root, Menu $menu): Response
+    {
         $form = $this->createForm(MenuType::class, $menu);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid() && $this->control($menuRepository, $menu)) {
             $menuRepository->add($menu, true);
 
             return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
@@ -70,57 +223,14 @@ class MenuAdminController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit.html', name: 'app_menu_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, MenuRepository $menuRepository, Menu $menu): Response
+    private function control(MenuRepository $menuRepository, Menu $menu): bool
     {
-        $root = $menu;
-        $form = $this->createForm(MenuType::class, $menu);
-        $form->handleRequest($request);
+        if (!$menuRepository->verifySlug($menu)) {
+            $this->addFlash('error', sprintf('Le slug "%s" n\'est pas disponible', $menu->getSlug()));
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $menuRepository->add($menu, true);
-
-            return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
+            return false;
         }
 
-        return $this->renderForm('menu/edit.html.twig', [
-            'root' => $menu,
-            'menu' => $menu,
-            'form' => $form,
-        ]);
-    }
-
-    #[Route('/{id}/show.html', name: 'app_menu_show', methods: ['GET'])]
-    public function show(MenuRepository $menuRepository, int $id): Response
-    {
-        $menu = $menuRepository->getById($id);
-
-        return $this->render('menu/show.html.twig', [
-            'menu' => $menu,
-        ]);
-    }
-
-    #[Route('/{id}/delete.html', name: 'app_menu_delete', methods: ['POST'])]
-    public function delete(Request $request, MenuRepository $menuRepository, EntityManagerInterface $manager, Menu $menu): Response
-    {
-        $token = $request->request->get('_token');
-        if (!\is_string($token)) {
-            $token = null;
-        }
-        if ($this->isCsrfTokenValid('delete'.$menu->getId(), $token)) {
-            $root = $menu->getParent();
-            $weight = $menu->getWeight();
-            $menuRepository->remove($menu, true);
-            $childs = $menuRepository->findBy(['parent' => $root], ['weight' => 'ASC']);
-            foreach ($childs as $child) {
-                if ($weight < $child->getWeight()) {
-                    $child->setWeight($child->getWeight() - 1);
-                    $manager->persist($child);
-                }
-            }
-            $manager->flush();
-        }
-
-        return $this->redirectToRoute('app_menu_show', ['id' => $root->getId()], Response::HTTP_SEE_OTHER);
+        return true;
     }
 }
