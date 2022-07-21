@@ -16,6 +16,11 @@
     <body class="body{% block body_class %}{% endblock %}">
         {% block body %}
             <div class="container">
+                |
+                {% for link in getMenu("main") %}
+                    <a href="{{ link.url }}">{{ link.label }}</a>
+                    |
+                {% endfor %}
                 {% block messages %}
                     {% for message in app.flashes('error') %}
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -47,4 +52,4 @@
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
     </body>
-</html>
+</html></body></html>
