@@ -47,9 +47,12 @@
                 {% block content %}{% endblock %}
             </div>
         {% endblock %}
-        {% block static %}{% endblock %}
+        {% block static %}
+            <img src="/build/icons/bootstrap.ca4afae2.svg" alt="Bootstrap" ...>
+            <i class="bi-github" role="img" aria-label="GitHub"></i>
+        {% endblock %}
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
         {% endblock %}
     </body>
-</html></body></html>
+</html>

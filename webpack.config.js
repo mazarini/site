@@ -61,6 +61,11 @@ Encore
     // uncomment if you use TypeScript
     //.enableTypeScriptLoader()
 
+    //.copyFiles({
+    //    from: './node_modules/bootstrap-icons/icons',
+    //    to: 'icons/[path][name].[hash:8].[ext]'
+    //})
+
     // uncomment if you use React
     //.enableReactPreset()
 
