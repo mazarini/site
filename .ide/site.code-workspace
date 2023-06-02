@@ -1,0 +1,65 @@
+{
+    "folders": [
+        {
+            "name": "====== Site ======",
+            "path": ".."
+        },
+        {
+            "name": "====== tools-bundle ======",
+            "path": "../mazarini/tools-bundle"
+        }
+    ],
+    "settings": {
+        "[makefile]": {
+            "editor.insertSpaces": false,
+            "editor.detectIndentation": true,
+            "editor.tabSize": 4,
+        },
+        "[*]": {
+            "editor.insertSpaces": true,
+            "editor.detectIndentation": false,
+        },
+        "editor.formatOnSave": true,
+        "emmet.includeLanguages": {
+            "twig": "html"
+        },
+        "files.associations": {
+            ".env.test": "ini",
+            "*.html": "twig",
+            "phpstan.neon.dist": "yaml",
+            ".xml.dist": "xml"
+        },
+        "files.insertFinalNewline": true,
+        "git.autofetch": true,
+        "git.suggestSmartCommit": false,
+        "intelephense.completion.fullyQualifyGlobalConstantsAndFunctions": true,
+        "json.schemas": [],
+        "php.suggest.basic": false,
+        "php.validate.enable": false,
+        "files.trimTrailingWhitespace": true,
+        "files.trimFinalNewlines": true,
+        "git-graph.commitDetailsView.fileView.fileTree.compactFolders": true,
+        "php.validate.executablePath": "php",
+        "scm.diffDecorationsIgnoreTrimWhitespace": "true",
+        "php-cs-fixer.configFile": "",
+        "php-cs-fixer.onSave": true,
+        "php-cs-fixer.executable": "~/bin/php-cs-fixer",
+        "twig-language-2.braceStyle": "collapse-preserve-inline",
+        "twig-language-2.indentStyle": "space",
+        "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": true,
+    },
+    "extensions": {
+        "recommendations": [
+            "editorconfig.editorconfig",
+            "irongeek.vscode-env",
+            "mhutchie.git-graph",
+            "xdebug.php-debug",
+            "bmewburn.vscode-intelephense-client",
+            "higoka.php-cs-fixer",
+            "ronvanderheijden.phpdoc-generator",
+            "mykhailokushnir.vscode-php-getter-setter",
+            "mblode.twig-language-2",
+            "shd101wyy.markdown-preview-enhanced"
+        ]
+    },
+}
